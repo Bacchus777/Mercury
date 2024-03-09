@@ -19,8 +19,6 @@
 #define DISABLE_GREENPOWER_BASIC_PROXY
 #define BDB_FINDING_BINDING_CAPABILITY_ENABLED 1
 #define BDB_REPORTING TRUE
-#define BDB_MAX_CLUSTERENDPOINTS_REPORTING 10
-
 
 #define HAL_BUZZER FALSE
 #define HAL_KEY TRUE
@@ -64,26 +62,11 @@
     #define INT_HEAP_LEN 2060
 #endif
 
-// #define INT_HEAP_LEN (2685 - 0x4B - 0xBB-0x50-0xae)
-// #define HAL_UART TRUE
-// #define HAL_UART_DMA 2
 #define HAL_UART TRUE
-
-#define BME280_32BIT_ENABLE
-//i2c bme280
-#define OCM_CLK_PORT 1
-#define OCM_CLK_PIN 6
-
-#define OCM_DATA_PORT 1
-#define OCM_DATA_PIN 7
-
 
 #define DS18B20_PORT 0
 #define TSENS_SBIT P0_0
 #define TSENS_BV BV(0)
 #define TSENS_DIR P0DIR
-
-
-
 
 #include "hal_board_cfg.h"

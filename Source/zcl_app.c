@@ -8,6 +8,7 @@
 #include "ZDObject.h"
 #include "math.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "nwk_util.h"
 #include "zcl.h"
@@ -31,6 +32,9 @@
 
 #include "commissioning.h"
 #include "factory_reset.h"
+
+#include "ds18b20.h"
+
 /* HAL */
 #include "hal_drivers.h"
 #include "hal_key.h"
@@ -69,14 +73,18 @@ static zclMercury_t const *mercury_dev = &mercury200_dev;
 /*********************************************************************
  * LOCAL FUNCTIONS
  */
-static void zclApp_Report(void);
 static void zclApp_BasicResetCB(void);
+static ZStatus_t zclApp_ReadWriteAuthCB(afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper);
+
 static void zclApp_RestoreAttributesFromNV(void);
 static void zclApp_SaveAttributesToNV(void);
+
+static void zclApp_Report(void);
 static void zclApp_ReadSensors(void);
+
 static void zclApp_HandleKeys(byte portAndAction, byte keyCode);
+
 static void zclApp_InitMercuryUart(void);
-static ZStatus_t zclApp_ReadWriteAuthCB(afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper);
 
 /*********************************************************************
  * ZCL General Profile Callback table
@@ -100,13 +108,18 @@ void zclApp_Init(byte task_id) {
     zclApp_TaskID = task_id;
 
     bdb_RegisterSimpleDescriptor(&zclApp_FirstEP);
-
     zclGeneral_RegisterCmdCallbacks(zclApp_FirstEP.EndPoint, &zclApp_CmdCallbacks);
-
-    zcl_registerAttrList(zclApp_FirstEP.EndPoint, zclApp_AttrsCount, zclApp_AttrsFirstEP);
-
+    zcl_registerAttrList(zclApp_FirstEP.EndPoint, zclApp_AttrsCount_FirstEP, zclApp_Attrs_FirstEP);
     zcl_registerReadWriteCB(zclApp_FirstEP.EndPoint, NULL, zclApp_ReadWriteAuthCB);
+    
+    bdb_RegisterSimpleDescriptor(&zclApp_SecondEP);
+    zclGeneral_RegisterCmdCallbacks(zclApp_SecondEP.EndPoint, &zclApp_CmdCallbacks);
+    zcl_registerAttrList(zclApp_SecondEP.EndPoint, zclApp_AttrsCount_SecondEP, zclApp_Attrs_SecondEP);
+    zcl_registerReadWriteCB(zclApp_SecondEP.EndPoint, NULL, zclApp_ReadWriteAuthCB);
+    
     zcl_registerForMsg(zclApp_TaskID);
+
+
     RegisterForKeys(zclApp_TaskID);
 
     LREP("Build %s \r\n", zclApp_DateCodeNT);
@@ -194,118 +207,65 @@ static void zclApp_ReadSensors(void)
   static uint8 currentSensorsReadingPhase = 0;
   current_values_t CurrentValues;
   energy_t Energies;
-  uint8 NUM_ATTRIBUTES;
+  int16 temp;
 
   LREP("currentSensorsReadingPhase %d\r\n", currentSensorsReadingPhase);
     // FYI: split reading sensors into phases, so single call wouldn't block processor
     // for extensive ammount of time
   switch (currentSensorsReadingPhase++) {
   case 0: // 
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_HOLD);
+    HalLedSet(HAL_LED_1, HAL_LED_MODE_BLINK);
     (*mercury_dev->RequestMeasure)(zclApp_Config.DeviceAddress, 0x63);
     break;
   case 1:
     
     CurrentValues = (*mercury_dev->ReadCurrentValues)();
-    LREP("Voltage = %d\r\n", CurrentValues.Voltage);
-    LREP("Current = %d\r\n", CurrentValues.Current);
-    LREP("Power = %d\r\n", CurrentValues.Power);
     if (CurrentValues.Voltage == MERCURY_INVALID_RESPONSE) {
       LREPMaster("Invalid response from counter\r\n");
-      osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_CONSERVE);
       break;
     }
     zclApp_CurrentValues = CurrentValues;
-
-    LREP("Voltage = %d\r\n", zclApp_CurrentValues.Voltage);
-    LREP("Current = %d\r\n", zclApp_CurrentValues.Current);
-    LREP("Power = %d\r\n", zclApp_CurrentValues.Power);
-
-//    bdb_RepChangedAttrValue(1, ELECTRICAL, ATTRID_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE);
-//    bdb_RepChangedAttrValue(1, ELECTRICAL, ATTRID_ELECTRICAL_MEASUREMENT_RMS_CURRENT);
-//    bdb_RepChangedAttrValue(1, ELECTRICAL, ATTRID_ELECTRICAL_MEASUREMENT_ACTIVE_POWER);
-
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_CONSERVE);
+  
+    bdb_RepChangedAttrValue(FIRST_ENDPOINT, ELECTRICAL, ATTRID_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE);
     break;
   case 2:
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_HOLD);
     (*mercury_dev->RequestMeasure)(zclApp_Config.DeviceAddress, 0x27);
     break;
   case 3:
     Energies = (*mercury_dev->ReadEnergy)();
     if (Energies.Energy_T1 == MERCURY_INVALID_RESPONSE) {
       LREPMaster("Invalid response from counter\r\n");
-      osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_CONSERVE);
       break;
     }
     zclApp_Energies = Energies;
-    LREP("Energy T1 = %ld\r\n", zclApp_Energies.Energy_T1);
-    LREP("Energy T2 = %ld\r\n", zclApp_Energies.Energy_T2);
-    LREP("Energy T3 = %ld\r\n", zclApp_Energies.Energy_T3);
-    LREP("Energy T4 = %ld\r\n", zclApp_Energies.Energy_T4);
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_CONSERVE);
+    bdb_RepChangedAttrValue(SECOND_ENDPOINT, SE_METERING, ATTRID_SE_METERING_CURR_TIER1_SUMM_DLVD);
+    break;
+  case 4:
+    temp = readTemperature();
+    if (temp == 1) {
+      LREPMaster("ReadDS18B20 error\r\n");
+      break;
+    } else {
+      zclApp_Temperature = temp;
+      LREP("ReadDS18B20 t=%d\r\n", zclApp_Temperature);
+    }
+    bdb_RepChangedAttrValue(FIRST_ENDPOINT, TEMP, ATTRID_MS_TEMPERATURE_MEASURED_VALUE);
     break;
   default:
+    HalLedSet(HAL_LED_1, HAL_LED_MODE_OFF);
     osal_stop_timerEx(zclApp_TaskID, APP_READ_SENSORS_EVT);
     osal_clear_event(zclApp_TaskID, APP_READ_SENSORS_EVT);
     currentSensorsReadingPhase = 0;
-    
-    NUM_ATTRIBUTES = 3;
-    zclReportCmd_t *pReportCmd;
-    pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (NUM_ATTRIBUTES * sizeof(zclReport_t)));
-    if (pReportCmd != NULL) {
-      pReportCmd->numAttr = NUM_ATTRIBUTES;
-
-      pReportCmd->attrList[0].attrID = ATTRID_ELECTRICAL_MEASUREMENT_RMS_VOLTAGE;
-      pReportCmd->attrList[0].dataType = ZCL_UINT16;
-      pReportCmd->attrList[0].attrData = (void *)(&zclApp_CurrentValues.Voltage);
-
-      pReportCmd->attrList[1].attrID = ATTRID_ELECTRICAL_MEASUREMENT_RMS_CURRENT;
-      pReportCmd->attrList[1].dataType = ZCL_UINT16;
-      pReportCmd->attrList[1].attrData = (void *)(&zclApp_CurrentValues.Current);
-
-      pReportCmd->attrList[2].attrID = ATTRID_ELECTRICAL_MEASUREMENT_ACTIVE_POWER;
-      pReportCmd->attrList[2].dataType = ZCL_INT16;
-      pReportCmd->attrList[2].attrData = (void *)(&zclApp_CurrentValues.Power);
-      
-      afAddrType_t inderect_DstAddr = {.addrMode = (afAddrMode_t)AddrNotPresent, .endPoint = 1, .addr.shortAddr = 0};
-      zcl_SendReportCmd(1, &inderect_DstAddr, ELECTRICAL, pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, TRUE, bdb_getZCLFrameCounter());
-    }
-    osal_mem_free(pReportCmd);
-
-    NUM_ATTRIBUTES = 4;
-    pReportCmd = osal_mem_alloc(sizeof(zclReportCmd_t) + (NUM_ATTRIBUTES * sizeof(zclReport_t)));
-    if (pReportCmd != NULL) {
-      pReportCmd->numAttr = NUM_ATTRIBUTES;
-      pReportCmd->attrList[0].attrID = ATTRID_SE_METERING_CURR_TIER1_SUMM_DLVD;
-      pReportCmd->attrList[0].dataType = ZCL_UINT32;
-      pReportCmd->attrList[0].attrData = (void *)(&zclApp_Energies.Energy_T1);
-      
-      pReportCmd->attrList[1].attrID = ATTRID_SE_METERING_CURR_TIER2_SUMM_DLVD;
-      pReportCmd->attrList[1].dataType = ZCL_UINT32;
-      pReportCmd->attrList[1].attrData = (void *)(&zclApp_Energies.Energy_T2);
-      
-      pReportCmd->attrList[2].attrID = ATTRID_SE_METERING_CURR_TIER3_SUMM_DLVD;
-      pReportCmd->attrList[2].dataType = ZCL_UINT32;
-      pReportCmd->attrList[2].attrData = (void *)(&zclApp_Energies.Energy_T3);
-      
-      pReportCmd->attrList[3].attrID = ATTRID_SE_METERING_CURR_TIER4_SUMM_DLVD;
-      pReportCmd->attrList[3].dataType = ZCL_UINT32;
-      pReportCmd->attrList[3].attrData = (void *)(&zclApp_Energies.Energy_T4);
-      
-      
-      afAddrType_t inderect_DstAddr = {.addrMode = (afAddrMode_t)AddrNotPresent, .endPoint = 1, .addr.shortAddr = 0};
-      zcl_SendReportCmd(1, &inderect_DstAddr, SE_METERING , pReportCmd, ZCL_FRAME_CLIENT_SERVER_DIR, TRUE, bdb_getZCLFrameCounter());
-    }
-    osal_mem_free(pReportCmd);
-
     break;
 
   }
 
 }
 
-static void zclApp_Report(void) { osal_start_reload_timer(zclApp_TaskID, APP_READ_SENSORS_EVT, 500); }
+static void zclApp_Report(void) 
+{ 
+  osal_start_reload_timer(zclApp_TaskID, APP_READ_SENSORS_EVT, 500); 
+}
 
 static void zclApp_BasicResetCB(void) {
     LREPMaster("BasicResetCB\r\n");
@@ -315,8 +275,6 @@ static void zclApp_BasicResetCB(void) {
 
 static ZStatus_t zclApp_ReadWriteAuthCB(afAddrType_t *srcAddr, zclAttrRec_t *pAttr, uint8 oper) {
     LREPMaster("AUTH CB called\r\n");
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_HOLD);
-    osal_pwrmgr_task_state(zclApp_TaskID, PWRMGR_CONSERVE);
     osal_start_timerEx(zclApp_TaskID, APP_SAVE_ATTRS_EVT, 2000);
     return ZSuccess;
 }

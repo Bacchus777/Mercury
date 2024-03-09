@@ -109,10 +109,10 @@ energy_t Mercury200_ReadEnergy(void)
         return result;
     }
 
-    result.Energy_T1 = (uint16)(response[ 5] / 16) * 10000000 + (response[ 5] % 16) * 1000000 + (uint16)(response[ 6] / 16) * 100000 + (response[ 6] % 16) * 10000 + (uint16)(response[ 7] / 16) * 1000 + (response[ 7] % 16) * 100 + (uint16)(response[ 8] / 16) * 10 + (response[ 8] % 16);
-    result.Energy_T2 = (uint16)(response[ 9] / 16) * 10000000 + (response[ 9] % 16) * 1000000 + (uint16)(response[10] / 16) * 100000 + (response[10] % 16) * 10000 + (uint16)(response[11] / 16) * 1000 + (response[11] % 16) * 100 + (uint16)(response[12] / 16) * 10 + (response[12] % 16);
-    result.Energy_T3 = (uint16)(response[13] / 16) * 10000000 + (response[13] % 16) * 1000000 + (uint16)(response[14] / 16) * 100000 + (response[14] % 16) * 10000 + (uint16)(response[15] / 16) * 1000 + (response[15] % 16) * 100 + (uint16)(response[16] / 16) * 10 + (response[16] % 16);
-    result.Energy_T4 = (uint16)(response[17] / 16) * 10000000 + (response[17] % 16) * 1000000 + (uint16)(response[18] / 16) * 100000 + (response[18] % 16) * 10000 + (uint16)(response[19] / 16) * 1000 + (response[19] % 16) * 100 + (uint16)(response[20] / 16) * 10 + (response[20] % 16);
+    result.Energy_T1 = (uint32)(response[ 5] / 16) * 10000000 + (response[ 5] % 16) * 1000000 + (uint16)(response[ 6] / 16) * 100000 + (response[ 6] % 16) * 10000 + (uint16)(response[ 7] / 16) * 1000 + (response[ 7] % 16) * 100 + (uint16)(response[ 8] / 16) * 10 + (response[ 8] % 16);
+    result.Energy_T2 = (uint32)(response[ 9] / 16) * 10000000 + (response[ 9] % 16) * 1000000 + (uint16)(response[10] / 16) * 100000 + (response[10] % 16) * 10000 + (uint16)(response[11] / 16) * 1000 + (response[11] % 16) * 100 + (uint16)(response[12] / 16) * 10 + (response[12] % 16);
+    result.Energy_T3 = (uint32)(response[13] / 16) * 10000000 + (response[13] % 16) * 1000000 + (uint16)(response[14] / 16) * 100000 + (response[14] % 16) * 10000 + (uint16)(response[15] / 16) * 1000 + (response[15] % 16) * 100 + (uint16)(response[16] / 16) * 10 + (response[16] % 16);
+    result.Energy_T4 = (uint32)(response[17] / 16) * 10000000 + (response[17] % 16) * 1000000 + (uint16)(response[18] / 16) * 100000 + (response[18] % 16) * 10000 + (uint16)(response[19] / 16) * 1000 + (response[19] % 16) * 100 + (uint16)(response[20] / 16) * 10 + (response[20] % 16);
 
     return result;
 }
