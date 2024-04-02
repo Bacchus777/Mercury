@@ -18,21 +18,26 @@ const fz_local = {
         type: ['attributeReport', 'readResponse'],
         convert: (model, msg, publish, options, meta) => {
             const result = {};
+            let energy_all = 0;
             if (msg.data.hasOwnProperty('currentTier1SummDelivered')) {
                 const data = msg.data['currentTier1SummDelivered'];
                 result.energy_t1 = data[1] / 100;
+                energy_all += data[1] / 100;
             }
             if (msg.data.hasOwnProperty('currentTier2SummDelivered')) {
                 const data = msg.data['currentTier2SummDelivered'];
                 result.energy_t2 = data[1] / 100;
+                energy_all += data[1] / 100;
                 }
             if (msg.data.hasOwnProperty('currentTier3SummDelivered')) {
                 const data = msg.data['currentTier3SummDelivered'];
                 result.energy_t3 = data[1] / 100;
+                energy_all += data[1] / 100;
             }
             if (msg.data.hasOwnProperty('currentTier4SummDelivered')) {
                 const data = msg.data['currentTier4SummDelivered'];
                 result.energy_t4 = data[1] / 100;
+                energy_all += data[1] / 100;
             }
             
             if (msg.data.hasOwnProperty(0xF001)) {
@@ -41,6 +46,7 @@ const fz_local = {
             if (msg.data.hasOwnProperty(0xF002)) {
                 result.measurement_period = msg.data[0xF002];
             }
+            result.energy_all = energy_all;
             return result;
         },
     }, 
@@ -117,6 +123,7 @@ configure: async (device, coordinatorEndpoint, logger) => {
         e.numeric('energy_t2', ACCESS_STATE).withUnit('kWh').withDescription('Energy on tariff 2'), 
         e.numeric('energy_t3', ACCESS_STATE).withUnit('kWh').withDescription('Energy on tariff 3'), 
         e.numeric('energy_t4', ACCESS_STATE).withUnit('kWh').withDescription('Energy on tariff 4'), 
+        e.numeric('energy_all', ACCESS_STATE).withUnit('kWh').withDescription('Full Energy'), 
 
         e.text('device_address', ACCESS_STATE | ACCESS_WRITE | ACCESS_READ).withDescription('Device Address').withEndpoint('l2'), 
         e.numeric('measurement_period', ACCESS_STATE | ACCESS_WRITE | ACCESS_READ).withDescription('Measurement Period').withValueMin(0).withValueMax(600).withEndpoint('l2')
