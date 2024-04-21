@@ -21,8 +21,8 @@ const fz_local = {
             let energy_all = 0;
             if (msg.data.hasOwnProperty('currentTier1SummDelivered')) {
                 const data = msg.data['currentTier1SummDelivered'];
-                result.energy_t1 = data[1] / 100;
-                energy_all += data[1] / 100;
+                result.energy_t1 = data[1] / 100  + 655.36;
+                energy_all += data[1] / 100 + 655.36;
             }
             if (msg.data.hasOwnProperty('currentTier2SummDelivered')) {
                 const data = msg.data['currentTier2SummDelivered'];

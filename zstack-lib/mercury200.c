@@ -78,13 +78,20 @@ current_values_t Mercury200_ReadCurrentValues(void)
   return result;
 }
 
+static uint32 from_bcd_to_dec(uint8 bcd) {
+
+    uint32 dec = ((bcd >> 4) & 0x0f) * 10 + (bcd & 0x0f);
+
+    return dec;
+}
+
 energy_t Mercury200_ReadEnergy(void) 
 {
     energy_t result = {
-                              .Energy_T1 = MERCURY_INVALID_RESPONSE, 
-                              .Energy_T2 = MERCURY_INVALID_RESPONSE, 
-                              .Energy_T3 = MERCURY_INVALID_RESPONSE, 
-                              .Energy_T3 = MERCURY_INVALID_RESPONSE
+      .Energy_T1 = MERCURY_INVALID_RESPONSE, 
+      .Energy_T2 = MERCURY_INVALID_RESPONSE, 
+      .Energy_T3 = MERCURY_INVALID_RESPONSE, 
+      .Energy_T3 = MERCURY_INVALID_RESPONSE
     };
     
     uint8 response[MERCURY200_E_RESPONSE_LENGTH] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -108,11 +115,35 @@ energy_t Mercury200_ReadEnergy(void)
         HalUARTRead(MERCURY_PORT, (uint8 *)&response, sizeof(response) / sizeof(response[0]));
         return result;
     }
+/*
+    result.Energy_T1 = (uint32)(response[ 5] / 16) * 10000000 + (response[ 5] % 16) * 1000000 + (uint32)(response[ 6] / 16) * 100000 + (response[ 6] % 16) * 10000 + (uint32)(response[ 7] / 16) * 1000 + (response[ 7] % 16) * 100 + (uint16)(response[ 8] / 16) * 10 + (response[ 8] % 16);
+    result.Energy_T2 = (uint32)(response[ 9] / 16) * 10000000 + (response[ 9] % 16) * 1000000 + (uint32)(response[10] / 16) * 100000 + (response[10] % 16) * 10000 + (uint32)(response[11] / 16) * 1000 + (response[11] % 16) * 100 + (uint16)(response[12] / 16) * 10 + (response[12] % 16);
+    result.Energy_T3 = (uint32)(response[13] / 16) * 10000000 + (response[13] % 16) * 1000000 + (uint32)(response[14] / 16) * 100000 + (response[14] % 16) * 10000 + (uint32)(response[15] / 16) * 1000 + (response[15] % 16) * 100 + (uint16)(response[16] / 16) * 10 + (response[16] % 16);
+    result.Energy_T4 = (uint32)(response[17] / 16) * 10000000 + (response[17] % 16) * 1000000 + (uint32)(response[18] / 16) * 100000 + (response[18] % 16) * 10000 + (uint32)(response[19] / 16) * 1000 + (response[19] % 16) * 100 + (uint16)(response[20] / 16) * 10 + (response[20] % 16);
+*/
+    result.Energy_T1 = 0;
+    result.Energy_T1 += from_bcd_to_dec(response[ 5]) * 1000000;
+    result.Energy_T1 += from_bcd_to_dec(response[ 6]) * 10000;
+    result.Energy_T1 += from_bcd_to_dec(response[ 7]) * 100;
+    result.Energy_T1 += from_bcd_to_dec(response[ 8]);
 
-    result.Energy_T1 = (uint32)(response[ 5] / 16) * 10000000 + (response[ 5] % 16) * 1000000 + (uint16)(response[ 6] / 16) * 100000 + (response[ 6] % 16) * 10000 + (uint16)(response[ 7] / 16) * 1000 + (response[ 7] % 16) * 100 + (uint16)(response[ 8] / 16) * 10 + (response[ 8] % 16);
-    result.Energy_T2 = (uint32)(response[ 9] / 16) * 10000000 + (response[ 9] % 16) * 1000000 + (uint16)(response[10] / 16) * 100000 + (response[10] % 16) * 10000 + (uint16)(response[11] / 16) * 1000 + (response[11] % 16) * 100 + (uint16)(response[12] / 16) * 10 + (response[12] % 16);
-    result.Energy_T3 = (uint32)(response[13] / 16) * 10000000 + (response[13] % 16) * 1000000 + (uint16)(response[14] / 16) * 100000 + (response[14] % 16) * 10000 + (uint16)(response[15] / 16) * 1000 + (response[15] % 16) * 100 + (uint16)(response[16] / 16) * 10 + (response[16] % 16);
-    result.Energy_T4 = (uint32)(response[17] / 16) * 10000000 + (response[17] % 16) * 1000000 + (uint16)(response[18] / 16) * 100000 + (response[18] % 16) * 10000 + (uint16)(response[19] / 16) * 1000 + (response[19] % 16) * 100 + (uint16)(response[20] / 16) * 10 + (response[20] % 16);
+    result.Energy_T2 = 0;
+    result.Energy_T2 += from_bcd_to_dec(response[ 9]) * 1000000;
+    result.Energy_T2 += from_bcd_to_dec(response[10]) * 10000;
+    result.Energy_T2 += from_bcd_to_dec(response[11]) * 100;
+    result.Energy_T2 += from_bcd_to_dec(response[12]);
+
+    result.Energy_T3 = 0;
+    result.Energy_T3 += from_bcd_to_dec(response[13]) * 1000000;
+    result.Energy_T3 += from_bcd_to_dec(response[14]) * 10000;
+    result.Energy_T3 += from_bcd_to_dec(response[15]) * 100;
+    result.Energy_T3 += from_bcd_to_dec(response[16]);
+
+    result.Energy_T4 = 0;
+    result.Energy_T4 += from_bcd_to_dec(response[17]) * 1000000;
+    result.Energy_T4 += from_bcd_to_dec(response[18]) * 10000;
+    result.Energy_T4 += from_bcd_to_dec(response[19]) * 100;
+    result.Energy_T4 += from_bcd_to_dec(response[20]);
 
     return result;
 }
