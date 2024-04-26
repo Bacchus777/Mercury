@@ -21,8 +21,8 @@ const fz_local = {
             let energy_all = 0;
             if (msg.data.hasOwnProperty('currentTier1SummDelivered')) {
                 const data = msg.data['currentTier1SummDelivered'];
-                result.energy_t1 = data[1] / 100  + 655.36;
-                energy_all += data[1] / 100 + 655.36;
+                result.energy_t1 = data[1] / 100;
+                energy_all += data[1] / 100;
             }
             if (msg.data.hasOwnProperty('currentTier2SummDelivered')) {
                 const data = msg.data['currentTier2SummDelivered'];
@@ -46,7 +46,7 @@ const fz_local = {
             if (msg.data.hasOwnProperty(0xF002)) {
                 result.measurement_period = msg.data[0xF002];
             }
-            result.energy_all = energy_all;
+            result.energy_all = energy_all.toFixed(2);
             return result;
         },
     }, 
