@@ -122,14 +122,9 @@ CONST zclAttrRec_t zclApp_Attrs_FirstEP[] = {
 
 uint8 CONST zclApp_AttrsCount_FirstEP = (sizeof(zclApp_Attrs_FirstEP) / sizeof(zclApp_Attrs_FirstEP[0]));
 
-const cId_t zclApp_InClusterList_FirstEP[] = {ZCL_CLUSTER_ID_GEN_BASIC};
+const cId_t zclApp_InClusterList_FirstEP[] = {ZCL_CLUSTER_ID_GEN_BASIC, ELECTRICAL, TEMP};
 
 #define APP_MAX_IN_CLUSTERS_FIRST_EP (sizeof(zclApp_InClusterList_FirstEP) / sizeof(zclApp_InClusterList_FirstEP[0]))
-
-const cId_t zclApp_OutClusterList_FirstEP[] = {ELECTRICAL, TEMP};
-
-#define APP_MAX_OUT_CLUSTERS_FIRST_EP (sizeof(zclApp_OutClusterList_FirstEP) / sizeof(zclApp_OutClusterList_FirstEP[0]))
-
 
 SimpleDescriptionFormat_t zclApp_FirstEP = {
     FIRST_ENDPOINT,                         //  int Endpoint;
@@ -139,8 +134,8 @@ SimpleDescriptionFormat_t zclApp_FirstEP = {
     APP_FLAGS,                              //  int   AppFlags:4;
     APP_MAX_IN_CLUSTERS_FIRST_EP,           //  byte  AppNumInClusters;
     (cId_t *)zclApp_InClusterList_FirstEP,  //  byte *pAppInClusterList;
-    APP_MAX_OUT_CLUSTERS_FIRST_EP,          //  byte  AppNumOutClusters;
-    (cId_t *)zclApp_OutClusterList_FirstEP  //  byte *pAppOutClusterList;
+    0,                                      //  byte  AppNumOutClusters;
+    (cId_t *)NULL                           //  byte *pAppOutClusterList;
 };
 
 CONST zclAttrRec_t zclApp_Attrs_SecondEP[] = {
@@ -161,10 +156,6 @@ const cId_t zclApp_InClusterList_SecondEP[] = {SE_METERING};
 
 #define APP_MAX_IN_CLUSTERS_SECOND_EP (sizeof(zclApp_InClusterList_SecondEP) / sizeof(zclApp_InClusterList_SecondEP[0]))
 
-const cId_t zclApp_OutClusterList_SecondEP[] = {SE_METERING};
-
-#define APP_MAX_OUT_CLUSTERS_SECOND_EP (sizeof(zclApp_OutClusterList_SecondEP) / sizeof(zclApp_OutClusterList_SecondEP[0]))
-
 SimpleDescriptionFormat_t zclApp_SecondEP = {
     SECOND_ENDPOINT,                          //  int Endpoint;
     ZCL_HA_PROFILE_ID,                        //  uint16 AppProfId[2];
@@ -173,8 +164,8 @@ SimpleDescriptionFormat_t zclApp_SecondEP = {
     APP_FLAGS,                                //  int   AppFlags:4;
     APP_MAX_IN_CLUSTERS_SECOND_EP,            //  byte  AppNumInClusters;
     (cId_t *)zclApp_InClusterList_SecondEP,   //  byte *pAppInClusterList;
-    APP_MAX_OUT_CLUSTERS_SECOND_EP,           //  byte  AppNumOutClusters;
-    (cId_t *)zclApp_OutClusterList_SecondEP   //  byte *pAppOutClusterList;
+    0,                                        //  byte  AppNumOutClusters;
+    (cId_t *)NULL                             //  byte *pAppOutClusterList;
 };
 
 

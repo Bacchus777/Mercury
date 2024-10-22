@@ -22,22 +22,34 @@ const fz_local = {
             let energy_all = 0;
             if (msg.data.hasOwnProperty('currentTier1SummDelivered')) {
                 const data = msg.data['currentTier1SummDelivered'];
-                result.energy_t1 =(data & 0xFFFFFFFF) / 100;
+                if (Array.isArray(data))
+                    result.energy_t1 = data[1] / 100
+                else
+                    result.energy_t1 =(data & 0xFFFFFFFF) / 100;
                 energy_all += result.energy_t1;
             }
             if (msg.data.hasOwnProperty('currentTier2SummDelivered')) {
                 const data = msg.data['currentTier2SummDelivered'];
-                result.energy_t2 = (data & 0xFFFFFFFF) / 100;
+                if (Array.isArray(data))
+                    result.energy_t2 = data[1] / 100
+                else
+                    result.energy_t2 =(data & 0xFFFFFFFF) / 100;
                 energy_all += result.energy_t2;
                 }
             if (msg.data.hasOwnProperty('currentTier3SummDelivered')) {
                 const data = msg.data['currentTier3SummDelivered'];
-                result.energy_t3 = (data & 0xFFFFFFFF) / 100;
+                if (Array.isArray(data))
+                    result.energy_t3 = data[1] / 100
+                else
+                    result.energy_t3 =(data & 0xFFFFFFFF) / 100;
                 energy_all += result.energy_t3;
             }
             if (msg.data.hasOwnProperty('currentTier4SummDelivered')) {
                 const data = msg.data['currentTier4SummDelivered'];
-                result.energy_t4 = (data & 0xFFFFFFFF) / 100;
+                if (Array.isArray(data))
+                    result.energy_t4 = data[1] / 100
+                else
+                    result.energy_t4 =(data & 0xFFFFFFFF) / 100;
                 energy_all += result.energy_t4;
             }
             
