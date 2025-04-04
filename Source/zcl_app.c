@@ -214,7 +214,7 @@ static void zclApp_ReadSensors(void)
     // for extensive ammount of time
   switch (currentSensorsReadingPhase++) {
   case 0: // 
-    HalLedSet(HAL_LED_1, HAL_LED_MODE_BLINK);
+    HalLedSet(HAL_LED_1, HAL_LED_MODE_FLASH);
     (*mercury_dev->RequestMeasure)(zclApp_Config.DeviceAddress, 0x63);
     break;
   case 1:
