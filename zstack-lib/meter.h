@@ -1,5 +1,5 @@
-#ifndef MERCURY_H
-#define MERCURY_H
+#ifndef METER_H
+#define METER_H
 
 #include "zcl_app.h"
 
@@ -17,4 +17,4 @@ typedef struct {
   read_energy_t ReadEnergy;
 } zclMercury_t;
 
-#endif //MERCURY_H
+#endif //METER_H
